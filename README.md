@@ -56,7 +56,7 @@ A production-ready, immersive 3D AI-powered gym SaaS website built with Next.js 
 
 ```bash
 # Clone and install
-git clone <repo-url>
+git clone https://github.com/AbdulRehman09-web/Nexus-Athletics.git
 cd nexus-athletics
 pnpm install
 
