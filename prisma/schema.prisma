@@ -1,0 +1,545 @@
+// Prisma schema for Nexus Athletics
+// This file was missing from the original project upload — reconstructed to
+// match the field names, relations, and enum values already assumed by
+// src/types/index.ts and every src/app/api/** route in this codebase.
+//
+// Setup:
+//   1. Point DATABASE_URL (see .env.example) at a real Postgres instance.
+//   2. pnpm db:generate   (generates the typed client)
+//   3. pnpm db:push       (creates tables — use db:migrate for tracked migrations)
+//   4. pnpm db:seed       (optional — populate sample data)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Users & auth
+// ---------------------------------------------------------------------------
+
+enum UserRole {
+  MEMBER
+  TRAINER
+  ADMIN
+  SUPER_ADMIN
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String
+  name          String
+  phone         String?
+  role          UserRole  @default(MEMBER)
+  avatarUrl     String?
+  dateOfBirth   DateTime?
+  gender        String?
+  height        Float?
+  weight        Float?
+  fitnessGoals  String?
+  injuries      String?
+  preferences   Json?
+  emailVerified DateTime?
+  lastLoginAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  trainer      Trainer?
+  memberships  Membership[]
+  bookings     Booking[]
+  testimonials Testimonial[]
+  chatSessions ChatSession[]
+  blogPosts    BlogPost[]
+  progressLogs ProgressLog[]
+  workoutPlans WorkoutPlan[]
+  notifications Notification[]
+
+  @@map("users")
+}
+
+// ---------------------------------------------------------------------------
+// Trainers
+// ---------------------------------------------------------------------------
+
+enum TrainerSpecialization {
+  STRENGTH_CONDITIONING
+  HYPERTROPHY
+  WEIGHT_LOSS
+  FUNCTIONAL_MOVEMENT
+  ATHLETIC_PERFORMANCE
+  MOBILITY_FLEXIBILITY
+  NUTRITION_COACHING
+  REHABILITATION
+  OLYMPIC_LIFTING
+  POWERLIFTING
+  ENDURANCE
+  YOUTH_DEVELOPMENT
+}
+
+model Trainer {
+  id               String                   @id @default(cuid())
+  userId           String                   @unique
+  user             User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  slug             String                   @unique
+  title            String
+  specializations  TrainerSpecialization[]
+  certifications   String[]
+  experienceYears  Int
+  biography        String
+  philosophy       String
+  expertise        String[]
+  hourlyRate       Float?
+  availability     Json?
+  languages        String[]
+  socialLinks      Json?
+  featuredImage    String?
+  galleryImages    String[]
+  isActive         Boolean                  @default(true)
+  isFeatured       Boolean                  @default(false)
+  sortOrder        Int                      @default(0)
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @updatedAt
+
+  classes      Class[]
+  programs     Program[]
+  bookings     Booking[]
+  testimonials Testimonial[]
+
+  @@map("trainers")
+}
+
+// ---------------------------------------------------------------------------
+// Services
+// ---------------------------------------------------------------------------
+
+enum ServiceCategory {
+  PERSONAL_TRAINING
+  STRENGTH
+  WEIGHT_LOSS
+  MUSCLE_BUILDING
+  FUNCTIONAL
+  CARDIO
+  HIIT
+  GROUP_CLASSES
+  MOBILITY
+  NUTRITION
+  ATHLETE_PERFORMANCE
+  RECOVERY
+}
+
+model Service {
+  id                String          @id @default(cuid())
+  slug              String          @unique
+  name              String
+  shortDescription  String
+  description       String
+  category          ServiceCategory
+  benefits          String[]
+  targetAudience    String
+  duration          String
+  price             Float?
+  features          String[]
+  imageUrl          String?
+  galleryImages     String[]
+  isActive          Boolean         @default(true)
+  isFeatured        Boolean         @default(false)
+  sortOrder         Int             @default(0)
+  seoTitle          String?
+  seoDescription    String?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  @@map("services")
+}
+
+// ---------------------------------------------------------------------------
+// Memberships
+// ---------------------------------------------------------------------------
+
+enum MembershipTier {
+  BASIC
+  PRO
+  ELITE
+}
+
+enum MembershipStatus {
+  ACTIVE
+  PAUSED
+  CANCELLED
+  EXPIRED
+  PENDING
+}
+
+model MembershipPlan {
+  id             String   @id @default(cuid())
+  name           String
+  tier           MembershipTier @unique
+  description    String
+  monthlyPrice   Float
+  yearlyPrice    Float
+  currency       String   @default("USD")
+  features       String[]
+  limitations    String[]
+  ctaText        String
+  isPopular      Boolean  @default(false)
+  isActive       Boolean  @default(true)
+  sortOrder      Int      @default(0)
+  seoTitle       String?
+  seoDescription String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("membership_plans")
+}
+
+model Membership {
+  id            String            @id @default(cuid())
+  userId        String
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tier          MembershipTier
+  status        MembershipStatus  @default(PENDING)
+  startDate     DateTime          @default(now())
+  endDate       DateTime?
+  billingPeriod String            @default("monthly")
+  price         Float
+  currency      String            @default("USD")
+  features      String[]
+  autoRenew     Boolean           @default(true)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  @@map("memberships")
+}
+
+// ---------------------------------------------------------------------------
+// Classes & Programs
+// ---------------------------------------------------------------------------
+
+enum ClassType {
+  STRENGTH
+  HIIT
+  CARDIO
+  MOBILITY
+  FUNCTIONAL
+  YOGA
+  PILATES
+  SPIN
+  BOXING
+  RECOVERY
+}
+
+enum DifficultyLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  ELITE
+}
+
+model Class {
+  id               String          @id @default(cuid())
+  name             String
+  slug             String          @unique
+  description      String
+  type             ClassType
+  difficulty       DifficultyLevel
+  trainerId        String
+  trainer          Trainer         @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+  schedule         Json
+  duration         Int
+  capacity         Int
+  price            Float?
+  location         String
+  equipmentNeeded  String[]
+  imageUrl         String?
+  isActive         Boolean         @default(true)
+  isFeatured       Boolean         @default(false)
+  requiresBooking  Boolean         @default(true)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  bookings Booking[]
+
+  @@map("classes")
+}
+
+model Program {
+  id              String          @id @default(cuid())
+  name            String
+  slug            String          @unique
+  description     String
+  trainerId       String
+  trainer         Trainer         @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+  category        ServiceCategory
+  difficulty      DifficultyLevel
+  durationWeeks   Int
+  sessionsPerWeek Int
+  price           Float
+  currency        String          @default("USD")
+  features        String[]
+  includes        String[]
+  imageUrl        String?
+  isActive        Boolean         @default(true)
+  isFeatured      Boolean         @default(false)
+  sortOrder       Int             @default(0)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@map("programs")
+}
+
+// ---------------------------------------------------------------------------
+// Bookings
+// ---------------------------------------------------------------------------
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+model Booking {
+  id            String        @id @default(cuid())
+  userId        String
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  trainerId     String?
+  trainer       Trainer?      @relation(fields: [trainerId], references: [id], onDelete: SetNull)
+  classId       String?
+  class         Class?        @relation(fields: [classId], references: [id], onDelete: SetNull)
+  type          String
+  status        BookingStatus @default(PENDING)
+  scheduledAt   DateTime
+  duration      Int
+  notes         String?
+  price         Float?
+  paymentStatus String        @default("pending")
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@map("bookings")
+}
+
+// ---------------------------------------------------------------------------
+// Testimonials & FAQ
+// ---------------------------------------------------------------------------
+
+model Testimonial {
+  id         String   @id @default(cuid())
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  trainerId  String?
+  trainer    Trainer? @relation(fields: [trainerId], references: [id], onDelete: SetNull)
+  name       String
+  role       String?
+  content    String
+  rating     Int
+  imageUrl   String?
+  videoUrl   String?
+  isApproved Boolean  @default(false)
+  isFeatured Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("testimonials")
+}
+
+enum FAQCategory {
+  GENERAL
+  MEMBERSHIP
+  TRAINING
+  NUTRITION
+  FACILITIES
+  BOOKING
+  BILLING
+  POLICIES
+}
+
+model FAQ {
+  id         String      @id @default(cuid())
+  question   String
+  answer     String
+  category   FAQCategory
+  sortOrder  Int         @default(0)
+  isActive   Boolean     @default(true)
+  isFeatured Boolean     @default(false)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  @@map("faqs")
+}
+
+// ---------------------------------------------------------------------------
+// Blog
+// ---------------------------------------------------------------------------
+
+model BlogPost {
+  id              String    @id @default(cuid())
+  title           String
+  slug            String    @unique
+  excerpt         String
+  content         String
+  featuredImage   String?
+  authorId        String
+  author          User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  category        String
+  tags            String[]
+  readTime        Int
+  seoTitle        String?
+  seoDescription  String?
+  canonicalUrl    String?
+  isPublished     Boolean   @default(false)
+  publishedAt     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@map("blog_posts")
+}
+
+// ---------------------------------------------------------------------------
+// AI chatbot
+// ---------------------------------------------------------------------------
+
+model ChatSession {
+  id        String        @id @default(cuid())
+  userId    String?
+  user      User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  title     String?
+  isActive  Boolean       @default(true)
+  messages  ChatMessage[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@map("chat_sessions")
+}
+
+model ChatMessage {
+  id        String      @id @default(cuid())
+  sessionId String
+  session   ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  role      String
+  content   String
+  metadata  Json?
+  createdAt DateTime    @default(now())
+
+  @@map("chat_messages")
+}
+
+model KnowledgeBaseEntry {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  category  String
+  tags      String[]
+  sourceUrl String?
+  isActive  Boolean  @default(true)
+  priority  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("knowledge_base_entries")
+}
+
+// ---------------------------------------------------------------------------
+// Locations
+// ---------------------------------------------------------------------------
+
+model GymLocation {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  address     String
+  city        String
+  state       String
+  country     String
+  postalCode  String
+  phone       String
+  email       String
+  latitude    Float
+  longitude   Float
+  hours       Json
+  timezone    String
+  description String?
+  amenities   String[]
+  images      String[]
+  isPrimary   Boolean  @default(false)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("gym_locations")
+}
+
+// ---------------------------------------------------------------------------
+// Member progress & workouts
+// ---------------------------------------------------------------------------
+
+model ProgressLog {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date         DateTime @default(now())
+  weight       Float?
+  bodyFat      Float?
+  muscleMass   Float?
+  measurements Json?
+  photos       String[]
+  notes        String?
+  createdAt    DateTime @default(now())
+
+  @@map("progress_logs")
+}
+
+model WorkoutPlan {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  schedule    Json
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("workout_plans")
+}
+
+// ---------------------------------------------------------------------------
+// Notifications
+// ---------------------------------------------------------------------------
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  title     String
+  message   String
+  data      Json?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@map("notifications")
+}
+
+// ---------------------------------------------------------------------------
+// Contact form submissions (backs the new /contact page + /api/contact route)
+// ---------------------------------------------------------------------------
+
+model ContactSubmission {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  subject   String?
+  message   String
+  tourRequested Boolean @default(false)
+  createdAt DateTime @default(now())
+
+  @@map("contact_submissions")
+}

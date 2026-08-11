@@ -1,0 +1,295 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --font-display: 'Space Grotesk', 'Syne', system-ui, sans-serif;
+    --font-body: 'DM Sans', 'Inter', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    @apply scroll-smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  body {
+    @apply bg-nexus-950 text-nexus-50 font-body antialiased;
+    background-image: var(--bg-noise), var(--bg-gradient);
+    background-attachment: fixed;
+  }
+
+  ::selection {
+    @apply bg-accent-gold/30 text-nexus-50;
+  }
+
+  ::-webkit-scrollbar {
+    @apply w-1.5;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-nexus-950;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-nexus-700 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-nexus-500;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-accent-gold ring-offset-2 ring-offset-nexus-950;
+  }
+
+  @keyframes noise {
+    0%, 100% { transform: translate(0, 0); }
+    10% { transform: translate(-5%, -10%); }
+    20% { transform: translate(-15%, 5%); }
+    30% { transform: translate(7%, -25%); }
+    40% { transform: translate(-5%, 25%); }
+    50% { transform: translate(-15%, 10%); }
+    60% { transform: translate(15%, 0%); }
+    70% { transform: translate(0%, 15%); }
+    80% { transform: translate(-10%, 10%); }
+    90% { transform: translate(10%, -5%); }
+  }
+
+  .noise-overlay {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.03;
+    animation: noise 0.5s infinite;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  }
+}
+
+@layer components {
+  .container-nexus {
+    @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 xl:px-12;
+  }
+
+  .section {
+    @apply py-18 md:py-24 lg:py-32 relative overflow-hidden;
+  }
+
+  .section-inner {
+    @apply container-nexus relative z-10;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-body-md font-semibold transition-all duration-300 ease-expo-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-gold focus-visible:ring-offset-2 focus-visible:ring-offset-nexus-950 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-primary {
+    @apply btn bg-accent-gold text-nexus-950 hover:bg-accent-gold-light hover:shadow-nexus-glow active:scale-[0.98] hover:-translate-y-0.5;
+  }
+
+  .btn-secondary {
+    @apply btn bg-surface-200 text-nexus-100 border border-border hover:bg-surface-300 hover:border-border-light hover:-translate-y-0.5 active:scale-[0.98];
+  }
+
+  .btn-ghost {
+    @apply btn bg-transparent text-nexus-300 hover:text-nexus-100 hover:bg-surface-100 active:scale-[0.98];
+  }
+
+  .btn-outline {
+    @apply btn border-2 border-accent-gold text-accent-gold hover:bg-accent-gold/10 hover:-translate-y-0.5 active:scale-[0.98];
+  }
+
+  .btn-lg {
+    @apply px-8 py-4 text-body-lg rounded-2xl;
+  }
+
+  .btn-sm {
+    @apply px-4 py-2.5 text-body-sm rounded-lg;
+  }
+
+  .card {
+    @apply relative overflow-hidden rounded-2xl bg-surface-100 border border-border backdrop-blur-xl transition-all duration-500 ease-expo-out hover:border-border-light hover:shadow-nexus-lg hover:-translate-y-1;
+  }
+
+  .card-interactive {
+    @apply card cursor-pointer hover:shadow-nexus-glow;
+  }
+
+  .input {
+    @apply w-full rounded-xl bg-surface-100 border border-border px-4 py-3.5 text-body-md text-nexus-100 placeholder:text-nexus-500 transition-all duration-300 focus:border-accent-gold focus:ring-2 focus:ring-accent-gold/20 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .label {
+    @apply block mb-2 text-body-sm font-medium text-nexus-300;
+  }
+
+  .badge {
+    @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-caption font-medium;
+  }
+
+  .badge-gold {
+    @apply badge bg-accent-gold/20 text-accent-gold border border-accent-gold/30;
+  }
+
+  .badge-outline {
+    @apply badge border border-border text-nexus-400;
+  }
+
+  .link {
+    @apply relative inline-flex items-center gap-1.5 text-body-md font-medium text-nexus-300 transition-colors duration-300 hover:text-accent-gold;
+  }
+
+  .link::after {
+    @apply content-[''] absolute bottom-0 left-0 w-0 h-0.5 bg-accent-gold transition-all duration-300 ease-expo-out;
+  }
+
+  .link:hover::after {
+    @apply w-full;
+  }
+
+  .heading-display {
+    @apply font-display text-display-xl text-nexus-50 tracking-tight;
+  }
+
+  .heading-lg {
+    @apply font-display text-display-lg text-nexus-50 tracking-tight;
+  }
+
+  .heading-md {
+    @apply font-display text-display-md text-nexus-50 tracking-tight;
+  }
+
+  .heading-sm {
+    @apply font-display text-display-sm text-nexus-50 tracking-tight;
+  }
+
+  .text-gradient {
+    @apply bg-gradient-to-r from-nexus-50 via-nexus-200 to-accent-gold bg-clip-text text-transparent;
+  }
+
+  .text-gradient-gold {
+    @apply bg-gradient-to-r from-accent-gold-light via-accent-gold to-accent-gold-dark bg-clip-text text-transparent;
+  }
+
+  .glass {
+    @apply bg-surface-100/50 backdrop-blur-2xl border border-border/50;
+  }
+
+  .glass-strong {
+    @apply bg-surface-200/80 backdrop-blur-3xl border border-border-light;
+  }
+
+  .gradient-border {
+    @apply relative;
+  }
+
+  .gradient-border::before {
+    @apply content-[''] absolute inset-[-1px] rounded-[inherit] bg-gradient-to-r from-accent-gold/50 via-transparent to-accent-copper/50 opacity-0 transition-opacity duration-500 -z-10;
+  }
+
+  .gradient-border:hover::before {
+    @apply opacity-100;
+  }
+
+  .reveal-up {
+    @apply opacity-0 translate-y-10 transition-all duration-1000 ease-expo-out;
+  }
+
+  .reveal-up.active {
+    @apply opacity-100 translate-y-0;
+  }
+
+  .stagger-1 { transition-delay: 100ms; }
+  .stagger-2 { transition-delay: 200ms; }
+  .stagger-3 { transition-delay: 300ms; }
+  .stagger-4 { transition-delay: 400ms; }
+  .stagger-5 { transition-delay: 500ms; }
+  .stagger-6 { transition-delay: 600ms; }
+  .stagger-7 { transition-delay: 700ms; }
+  .stagger-8 { transition-delay: 800ms; }
+
+  .magnetic {
+    @apply transition-transform duration-300 ease-expo-out;
+  }
+
+  .shine {
+    @apply relative overflow-hidden;
+  }
+
+  .shine::before {
+    @apply content-[''] absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-700 ease-expo-out;
+  }
+
+  .shine:hover::before {
+    @apply translate-x-full;
+  }
+
+  .stat-number {
+    @apply font-display text-display-lg font-bold text-nexus-50 tabular-nums;
+  }
+
+  .stat-label {
+    @apply text-body-sm text-nexus-500 uppercase tracking-wider font-medium;
+  }
+
+  .divider {
+    @apply w-full h-px bg-gradient-to-r from-transparent via-border to-transparent;
+  }
+
+  .divider-gold {
+    @apply w-full h-px bg-gradient-to-r from-transparent via-accent-gold/50 to-transparent;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .animate-in {
+    animation: fadeIn 0.6s ease-out forwards, slideUp 0.7s ease-out forwards;
+  }
+
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+
+  .transform-style-3d {
+    transform-style: preserve-3d;
+  }
+
+  .backface-hidden {
+    backface-visibility: hidden;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
