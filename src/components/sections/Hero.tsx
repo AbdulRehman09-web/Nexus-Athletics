@@ -22,17 +22,29 @@ export function Hero() {
     const hero = heroRef.current;
     if (!hero) return;
 
+    // Throttle scroll-driven state updates via rAF so we update React state
+    // at most once per frame instead of on every scroll/scrub tick - this
+    // matters most on mobile where extra re-renders compound with the (now
+    // skipped-on-mobile) WebGL render loop.
+    let rafId: number | null = null;
     const st = ScrollTrigger.create({
       trigger: hero,
       start: 'top top',
       end: 'bottom top',
       scrub: 1,
       onUpdate: (self) => {
-        setScrollProgress(self.progress);
+        if (rafId !== null) return;
+        rafId = requestAnimationFrame(() => {
+          setScrollProgress(self.progress);
+          rafId = null;
+        });
       },
     });
 
-    return () => st.kill();
+    return () => {
+      st.kill();
+      if (rafId !== null) cancelAnimationFrame(rafId);
+    };
   }, []);
 
   useEffect(() => {

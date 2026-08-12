@@ -22,8 +22,25 @@ interface Hero3DProps {
 
 export function Hero3D({ className, scrollProgress = 0 }: Hero3DProps) {
   const [quality, setQuality] = useState<'high' | 'medium' | 'low'>('high');
+  // null = "not decided yet" (avoids a flash of 3D before we can check),
+  // true/false once we know whether to render the WebGL scene at all.
+  const [skip3D, setSkip3D] = useState<boolean | null>(null);
 
   useEffect(() => {
+    // Bail out of the whole WebGL scene on phones/tablets and on devices
+    // that ask for reduced motion. Mobile GPUs + a continuous rAF render
+    // loop (particles, floating metrics, contact shadows, HDRI env map)
+    // is what causes the page to feel "stuck"/frozen on mobile.
+    const isCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
+    const isNarrowViewport = window.innerWidth < 768;
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const isLowMemory = 'deviceMemory' in navigator && (navigator as any).deviceMemory <= 4;
+
+    setSkip3D((isCoarsePointer && isNarrowViewport) || prefersReducedMotion || isLowMemory);
+  }, []);
+
+  useEffect(() => {
+    if (skip3D) return;
     const canvas = document.querySelector('canvas');
     if (canvas) {
       const gl = canvas as HTMLCanvasElement;
@@ -42,7 +59,27 @@ export function Hero3D({ className, scrollProgress = 0 }: Hero3DProps) {
         }
       }
     }
-  }, []);
+  }, [skip3D]);
+
+  // Static, cheap fallback for mobile/reduced-motion/low-memory devices -
+  // same visual footprint, no WebGL context, no render loop.
+  if (skip3D) {
+    return (
+      <div
+        className={cn('relative w-full h-full flex items-center justify-center', className)}
+        style={{ width: '100%', height: '100%' }}
+        aria-hidden="true"
+      >
+        <div className="w-full h-full bg-[radial-gradient(ellipse_at_center,_rgba(212,175,55,0.12),_transparent_65%)]" />
+      </div>
+    );
+  }
+
+  // Still deciding (first render on the server / before effect runs) -
+  // render nothing rather than flashing the heavy scene in.
+  if (skip3D === null) {
+    return <div className={cn('relative w-full h-full', className)} style={{ width: '100%', height: '100%' }} />;
+  }
 
   return (
     <div className={cn('relative w-full h-full', className)} style={{ width: '100%', height: '100%' }}>
